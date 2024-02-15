@@ -5,6 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { auth } from "../firebaseConfig";
 import Login from "../screens/Login";
 import Signup from "../screens/Signup";
+import Home from "../screens/Home";
 import { onAuthStateChanged } from "firebase/auth";
 
 const stack = createNativeStackNavigator();
@@ -14,7 +15,7 @@ const Stack = () => {
   const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
         setAuthenticated(true);
@@ -32,7 +33,7 @@ const Stack = () => {
 
       {authenticated ? (
         <stack.Navigator screenOptions={{ headerShown: false }}>
-          <stack.Screen name="Tabs" component={Login} />
+          <stack.Screen name="Home" component={Home} />
         </stack.Navigator>
       ) : (
         <stack.Navigator screenOptions={{ headerShown: false }}>
