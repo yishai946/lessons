@@ -3,10 +3,10 @@ import React, { useEffect, useState } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
 import { auth } from "../firebaseConfig";
-import Login from "../screens/Login";
-import Signup from "../screens/Signup";
+import LoginSignup from "../screens/LoginSignup";
 import Home from "../screens/Home";
 import { onAuthStateChanged } from "firebase/auth";
+import Tabs from "./Tabs";
 
 const stack = createNativeStackNavigator();
 
@@ -33,12 +33,11 @@ const Stack = () => {
 
       {authenticated ? (
         <stack.Navigator screenOptions={{ headerShown: false }}>
-          <stack.Screen name="Home" component={Home} />
+          <stack.Screen name="Tabs" component={Tabs} />
         </stack.Navigator>
       ) : (
         <stack.Navigator screenOptions={{ headerShown: false }}>
-          <stack.Screen name="Login" component={Login} />
-          <stack.Screen name="Signup" component={Signup} />
+          <stack.Screen name="Auth" component={LoginSignup} />
         </stack.Navigator>
       )}
     </NavigationContainer>

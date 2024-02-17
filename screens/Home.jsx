@@ -1,14 +1,21 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import { Button, StyleSheet, Text, SafeAreaView } from "react-native";
+import React from "react";
+import Auth from "../functions/Auth";
 
 const Home = () => {
   return (
-    <View>
+    <SafeAreaView>
       <Text>Home</Text>
-    </View>
-  )
-}
+      <Button
+        title="Logout"
+        onPress={() => {
+          Auth.logout();
+        }}
+      />
+    </SafeAreaView>
+  );
+};
 
-export default Home
+export default Home;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});
