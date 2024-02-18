@@ -1,41 +1,72 @@
+import React, { useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
+  ActivityIndicator,
+  Alert,
+  FlatList,
   KeyboardAvoidingView,
   Platform,
-  TouchableOpacity,
+  StyleSheet,
+  Text,
   TextInput,
-  Alert,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState } from "react";
-import { useAppContext } from "../context/appContext";
 import Modal from "react-native-modal";
+import Student from "../components/Student";
+import { useAppContext } from "../context/appContext";
 
 const Students = () => {
-  const { modalVisible, setModalVisible, students, addStudent } =
-    useAppContext();
+  const {
+    modalVisible,
+    setModalVisible,
+    students,
+    addStudent,
+    // fetchStudents,
+    loading,
+    setLoading,
+  } = useAppContext();
   const [newStudent, setNewStudent] = useState({});
 
-  const add = () => {
-    if (
-      newStudent.name &&
-      newStudent.hours &&
-      newStudent.id &&
-      newStudent.study &&
-      newStudent.subject
-    ) {
-      addStudent(newStudent);
-      // setNewStudent({});
-      setModalVisible(false);
-    } else {
-      Alert.alert("Please fill all the fields");
+  const add = async () => {
+    try {
+      if (
+        newStudent.name &&
+        newStudent.hours &&
+        newStudent.id &&
+        newStudent.study &&
+        newStudent.subject
+      ) {
+        setLoading(true);
+        setModalVisible(false);
+        setNewStudent({});
+        await addStudent(newStudent);
+        // await fetchStudents();
+      } else {
+        Alert.alert("Please fill all the fields");
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <View>
-      <Text>Students</Text>
+    <>
+      {loading ? (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <ActivityIndicator />
+        </View>
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.container}
+          data={students}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <Student student={item} />}
+        />
+      )}
 
       {modalVisible && (
         <Modal
@@ -114,13 +145,19 @@ const Students = () => {
           </KeyboardAvoidingView>
         </Modal>
       )}
-    </View>
+    </>
   );
 };
 
 export default Students;
 
 const styles = StyleSheet.create({
+  container: {
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingTop: 10,
+    flexDirection: "column",
+  },
   modal: {
     margin: 0,
     justifyContent: "flex-end",
