@@ -9,6 +9,7 @@ import {
   where,
   serverTimestamp,
   orderBy,
+  deleteDoc,
 } from "firebase/firestore";
 
 const AppContext = createContext();
@@ -31,7 +32,7 @@ export const AppProvider = ({ children }) => {
       const q = query(
         collection(db, "students"),
         where("teacherId", "==", uid),
-        orderBy("createdAt", "desc")
+        orderBy("timestamp", "desc")
       );
       const res = await getDocs(q);
       const students = [];
@@ -46,18 +47,26 @@ export const AppProvider = ({ children }) => {
 
   const addStudent = async (newStudent) => {
     try {
-      const studentRef = doc(collection(db, "students"));
-      await setDoc(studentRef, {
+      await setDoc(doc(db, "students", newStudent.id), {
         ...newStudent,
         teacherId: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
+        timestamp: serverTimestamp(),
       });
-      setStudents([
-        { ...newStudent, teacherId: auth.currentUser.uid },
-        ...students,
-      ]);
+      const temp = students.filter((student) => student.id !== newStudent.id);
+      temp.unshift({ ...newStudent, teacherId: auth.currentUser.uid });
+      setStudents(temp);
     } catch (e) {
       console.error("error adding student: ", e);
+    }
+  };
+
+  const deleteStudent = async (id) => {
+    try {
+      await deleteDoc(doc(db, "students", id));
+      const temp = students.filter((student) => student.id !== id);
+      setStudents(temp);
+    } catch (e) {
+      console.error("error deleting student: ", e);
     }
   };
 
@@ -72,7 +81,7 @@ export const AppProvider = ({ children }) => {
         setModalVisible,
         students,
         addStudent,
-        // fetchStudents
+        deleteStudent,
       }}
     >
       {children}

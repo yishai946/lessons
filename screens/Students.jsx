@@ -21,11 +21,12 @@ const Students = () => {
     setModalVisible,
     students,
     addStudent,
-    // fetchStudents,
     loading,
     setLoading,
+    deleteStudent,
   } = useAppContext();
   const [newStudent, setNewStudent] = useState({});
+  const [optionsOpen, setOptionsOpen] = useState(false);
 
   const add = async () => {
     try {
@@ -34,13 +35,11 @@ const Students = () => {
         newStudent.hours &&
         newStudent.id &&
         newStudent.study &&
-        newStudent.subject
+        newStudent.phone
       ) {
         setLoading(true);
-        setModalVisible(false);
-        setNewStudent({});
+        closeModal();
         await addStudent(newStudent);
-        // await fetchStudents();
       } else {
         Alert.alert("Please fill all the fields");
       }
@@ -49,6 +48,31 @@ const Students = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      setModalVisible(false);
+      await deleteStudent(newStudent.id);
+      closeModal();
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openOptions = (student) => {
+    setNewStudent(student);
+    setOptionsOpen(true);
+    setModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setModalVisible(false);
+    setNewStudent({});
+    setOptionsOpen(false);
   };
 
   return (
@@ -64,14 +88,16 @@ const Students = () => {
           contentContainerStyle={styles.container}
           data={students}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <Student student={item} />}
+          renderItem={({ item }) => (
+            <Student student={item} openOptions={openOptions} />
+          )}
         />
       )}
 
       {modalVisible && (
         <Modal
           isVisible={modalVisible}
-          onBackdropPress={() => setModalVisible(false)}
+          onBackdropPress={closeModal}
           style={styles.modal}
           propagateSwipe={true}
         >
@@ -92,7 +118,6 @@ const Students = () => {
               style={styles.input}
               placeholder="Hours"
               keyboardType="numeric"
-              returnKeyType="done"
               placeholderTextColor="gray"
               value={newStudent.hours ? newStudent.hours.toString() : ""}
               onChangeText={(text) =>
@@ -102,10 +127,22 @@ const Students = () => {
             <TextInput
               style={styles.input}
               placeholder="ID"
+              keyboardType="numeric"
               placeholderTextColor="gray"
               value={newStudent.id}
               onChangeText={(text) =>
                 setNewStudent({ ...newStudent, id: text })
+              }
+              editable={!optionsOpen}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Phone"
+              keyboardType="numeric"
+              placeholderTextColor="gray"
+              value={newStudent.phone}
+              onChangeText={(text) =>
+                setNewStudent({ ...newStudent, phone: text })
               }
             />
             <TextInput
@@ -117,31 +154,34 @@ const Students = () => {
                 setNewStudent({ ...newStudent, study: text })
               }
             />
-            <TextInput
-              style={styles.input}
-              placeholder="Subject"
-              placeholderTextColor="gray"
-              value={newStudent.subject}
-              onChangeText={(text) =>
-                setNewStudent({ ...newStudent, subject: text })
-              }
-            />
-            <TouchableOpacity style={styles.modalButton} onPress={add}>
-              <Text style={{ color: "white" }}>Add Student</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                setModalVisible(false);
-                setNewStudent({});
-              }}
-              style={{
-                ...styles.modalButton,
-                marginBottom: 30,
-                backgroundColor: "#e1e1e1",
-              }}
-            >
-              <Text>Clear</Text>
-            </TouchableOpacity>
+            <View style={styles.modalButtonsContainer}>
+              {!optionsOpen ? (
+                <TouchableOpacity
+                  onPress={() => setNewStudent({})}
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: "#e1e1e1",
+                  }}
+                >
+                  <Text>Clear</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleDelete}
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: "#b30000",
+                  }}
+                >
+                  <Text style={{ color: "white" }}>Delete</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity style={styles.modalButton} onPress={add}>
+                <Text style={{ color: "white" }}>
+                  {optionsOpen ? "Update" : "Add Student"}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </KeyboardAvoidingView>
         </Modal>
       )}
@@ -169,6 +209,13 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 18,
     borderTopLeftRadius: 18,
   },
+  modalButtonsContainer: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
   modalButton: {
     fontSize: 18,
     flexDirection: "row",
@@ -178,6 +225,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: "royalblue",
     borderRadius: 8,
+    width: "48%",
   },
   input: {
     textAlign: "center",
