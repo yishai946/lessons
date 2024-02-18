@@ -1,37 +1,40 @@
-import { StyleSheet, Text, View, StatusBar } from "react-native";
-import React, { useEffect, useState } from "react";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { onAuthStateChanged } from "firebase/auth";
+import React, { useEffect } from "react";
+import { StatusBar } from "react-native";
+import { useAppContext } from "../context/appContext";
 import { auth } from "../firebaseConfig";
 import LoginSignup from "../screens/LoginSignup";
-import Home from "../screens/Home";
-import { onAuthStateChanged } from "firebase/auth";
 import Tabs from "./Tabs";
 
 const stack = createNativeStackNavigator();
 
 const Stack = () => {
-  const [user, setUser] = useState(null);
-  const [authenticated, setAuthenticated] = useState(false);
+  const { user, setUser, loading, setLoading } = useAppContext();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
+        if(loading){
+          setLoading(false);
+        }
         setUser(user);
-        setAuthenticated(true);
       } else {
+        if(loading){
+          setLoading(false);
+        }
         setUser(null);
-        setAuthenticated(false);
       }
     });
     return unsubscribe;
-  }, [authenticated]);
+  }, []);
 
   return (
     <NavigationContainer>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
 
-      {authenticated ? (
+      {user ? (
         <stack.Navigator screenOptions={{ headerShown: false }}>
           <stack.Screen name="Tabs" component={Tabs} />
         </stack.Navigator>
@@ -45,5 +48,3 @@ const Stack = () => {
 };
 
 export default Stack;
-
-const styles = StyleSheet.create({});

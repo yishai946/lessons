@@ -9,36 +9,50 @@ import {
   Platform,
   View,
   Dimensions,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import Auth from "../functions/Auth";
+import { useAppContext } from "../context/appContext";
 
 const windowWidth = Dimensions.get("window").width;
 
 const LoginSignup = ({ navigation }) => {
+  const { loading, setLoading } = useAppContext();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const login = async () => {
-    try{
+    try {
+      setLoading(true);
       const res = await Auth.login(email, password);
+      if (res.code === "auth/invalid-credential") {
+        Alert.alert("email or password is incorrect");
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
-    catch(error){
-      console.log(error)
-    }
-  }
+  };
 
   const signup = async () => {
-    try{
+    try {
+      setLoading(true);
       const res = await Auth.signup(email, password);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
     }
-    catch(error){
-      console.log(error)
-    }
-  }
+  };
 
-  return (
+  return loading ? (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator color="black" />
+    </View>
+  ) : (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -53,6 +67,7 @@ const LoginSignup = ({ navigation }) => {
               setEmail(text);
             }}
             value={email}
+            textContentType="emailAddress"
           />
           <Text>password</Text>
           <TextInput

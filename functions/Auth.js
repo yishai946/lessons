@@ -27,16 +27,6 @@ const Auth = {
       );
       return userCredential.user;
     } catch (error) {
-      console.log(error);
-      return error;
-    }
-  },
-  logout: async () => {
-    try {
-      await auth.signOut();
-      return true;
-    } catch (error) {
-      console.log(error);
       return error;
     }
   },

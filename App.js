@@ -1,15 +1,11 @@
-import { StyleSheet } from "react-native";
 import Stack from "./navigation/Stack";
+import { AppProvider } from "./context/appContext";
 
 export default function App() {
-  return <Stack />;
+  return (
+    <AppProvider>
+      <Stack />
+    </AppProvider>
+  );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
