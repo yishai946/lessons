@@ -5,6 +5,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  TextInput,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import React, { useState } from "react";
 import { useAppContext } from "../context/appContext";
@@ -58,76 +61,89 @@ const Calendar = () => {
           style={styles.modal}
           propagateSwipe={true}
         >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            style={styles.modalContainer}
-          >
-            <View style={{ alignItems: "center" }}>
-              {/* <Text style={styles.modalText}>Student</Text> */}
-              <Picker
-                selectedValue={newLesson.student.name}
-                onValueChange={(itemValue, itemIndex) =>
-                  handleStudentChange(itemValue)
-                }
-                style={{ width: "100%" }}
-              >
-                {students.map((student) => (
-                  <Picker.Item
-                    key={student.id}
-                    label={student.name}
-                    value={student.name}
-                  />
-                ))}
-              </Picker>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.modalText}>Date</Text>
-              <DateTimePicker
-                value={newLesson.date}
-                mode={"date"}
-                onChange={(event, selectedDate) =>
-                  handleDateChange(event, selectedDate)
-                }
-              />
-            </View>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.modalContainer}
+            >
+              <View style={{ alignItems: "center" }}>
+                {/* <Text style={styles.modalText}>Student</Text> */}
+                <Picker
+                  selectedValue={newLesson.student.name}
+                  onValueChange={(itemValue, itemIndex) =>
+                    handleStudentChange(itemValue)
+                  }
+                  style={{ width: "100%" }}
+                >
+                  {students.map((student) => (
+                    <Picker.Item
+                      key={student.id}
+                      label={student.name}
+                      value={student.name}
+                    />
+                  ))}
+                </Picker>
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.modalText}>Date</Text>
+                <DateTimePicker
+                  value={newLesson.date}
+                  mode={"date"}
+                  onChange={(event, selectedDate) =>
+                    handleDateChange(event, selectedDate)
+                  }
+                />
+              </View>
 
-            <View style={styles.row}>
-              <Text style={styles.modalText}>Start</Text>
-              <DateTimePicker
-                value={newLesson.startTime}
-                mode={"time"}
-                onChange={(event, selectedDate) =>
-                  handlePickStartTime(event, selectedDate)
-                }
-              />
-            </View>
+              <View style={styles.row}>
+                <Text style={styles.modalText}>Start</Text>
+                <DateTimePicker
+                  value={newLesson.startTime}
+                  mode={"time"}
+                  onChange={(event, selectedDate) =>
+                    handlePickStartTime(event, selectedDate)
+                  }
+                />
+              </View>
 
-            <View style={styles.row}>
-              <Text style={styles.modalText}>End</Text>
-              <DateTimePicker
-                value={newLesson.endTime}
-                mode={"time"}
-                onChange={(event, selectedDate) =>
-                  handlePickEndTime(event, selectedDate)
-                }
-              />
-            </View>
+              <View style={styles.row}>
+                <Text style={styles.modalText}>End</Text>
+                <DateTimePicker
+                  value={newLesson.endTime}
+                  mode={"time"}
+                  onChange={(event, selectedDate) =>
+                    handlePickEndTime(event, selectedDate)
+                  }
+                />
+              </View>
 
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={{
-                  ...styles.modalButton,
-                  backgroundColor: "#e1e1e1",
-                }}
-                onPress={closeModal}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalButton}>
-                <Text style={{ color: "white" }}>Add Lesson</Text>
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
+              <View style={styles.row}>
+                <Text style={styles.modalText}>Notes</Text>
+                <TextInput
+                  style={styles.notes}
+                  multiline={true}
+                  onChangeText={(text) =>
+                    setNewLesson({ ...newLesson, notes: text })
+                  }
+                />
+              </View>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: "#e1e1e1",
+                  }}
+                  onPress={closeModal}
+                >
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.modalButton}>
+                  <Text style={{ color: "white" }}>Add Lesson</Text>
+                </TouchableOpacity>
+              </View>
+            </KeyboardAvoidingView>
+          </TouchableWithoutFeedback>
         </Modal>
       )}
     </View>
@@ -157,7 +173,6 @@ const styles = StyleSheet.create({
     paddingLeft: 20,
   },
   modalText: {
-    // color: "white",
     fontSize: 18,
   },
   modalButtons: {
@@ -177,5 +192,13 @@ const styles = StyleSheet.create({
     backgroundColor: "royalblue",
     borderRadius: 8,
     width: "48%",
+  },
+  notes: {
+    width: "70%",
+    height: 50,
+    borderColor: "gray",
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 10,
   },
 });
