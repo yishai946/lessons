@@ -33,6 +33,14 @@ const Tabs = () => {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="calendar" color={color} size={size} />
           ),
+          headerRight: () => (
+            <TouchableOpacity
+              style={{ marginRight: 15 }}
+              onPress={() => setModalVisible(true)}
+            >
+              <AntDesign name="pluscircle" size={24} color="royalblue" />
+            </TouchableOpacity>
+          ),
         }}
       />
 

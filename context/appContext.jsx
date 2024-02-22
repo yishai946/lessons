@@ -19,6 +19,7 @@ export const AppProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [students, setStudents] = useState([]);
+  const [lessons, setLessons] = useState([]);
   const uid = auth.currentUser?.uid;
 
   useEffect(() => {
@@ -44,6 +45,41 @@ export const AppProvider = ({ children }) => {
       console.error("error getting students: ", e);
     }
   };
+
+  const fetchLessons = async () => {
+    try{
+      const q = query(
+        collection(db, "lessons"),
+        where("teacherId", "==", uid),
+        orderBy("start", "desc")
+      );
+      const res = await getDocs(q);
+      const lessons = [];
+      res.forEach((doc) => {
+        lessons.push(doc.data());
+      });
+      setLessons(lessons);
+    }
+    catch(e){
+      console.error("error getting lessons: ", e);
+    }
+  }
+
+  const addLesson = async (newLesson) => {
+    try{
+      await setDoc(doc(db, "lessons", newLesson.id), {
+        ...newLesson,
+        teacherId: uid,
+        timestamp: serverTimestamp(),
+      });
+      const temp = lessons.filter((lesson) => lesson.id !== newLesson.id);
+      temp.unshift({ ...newLesson, teacherId: auth.currentUser.uid });
+      setLessons(temp);
+    }
+    catch(e){
+      console.error("error adding lesson: ", e);
+    }
+  }
 
   const addStudent = async (newStudent) => {
     try {
@@ -82,6 +118,8 @@ export const AppProvider = ({ children }) => {
         students,
         addStudent,
         deleteStudent,
+        lessons,
+        addLesson,
       }}
     >
       {children}
