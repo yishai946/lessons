@@ -10,6 +10,7 @@ import {
   serverTimestamp,
   orderBy,
   deleteDoc,
+  getDoc,
 } from "firebase/firestore";
 
 const AppContext = createContext();
@@ -67,14 +68,36 @@ export const AppProvider = ({ children }) => {
 
   const addLesson = async (newLesson) => {
     try{
-      await setDoc(doc(db, "lessons", newLesson.id), {
+      // add lesson document
+      const id = uid + newLesson.startTime.toString();
+      await setDoc(doc(db, "lessons", id), {
         ...newLesson,
         teacherId: uid,
         timestamp: serverTimestamp(),
       });
+
+      // update lessons state
       const temp = lessons.filter((lesson) => lesson.id !== newLesson.id);
       temp.unshift({ ...newLesson, teacherId: auth.currentUser.uid });
       setLessons(temp);
+
+      // update student hours
+      const studentRef = doc(db, "students", newLesson.student.id);
+      const studentSnap = await getDoc(studentRef);
+      if(studentSnap.exists()){
+        const student = studentSnap.data();
+        await setDoc(studentRef, { ...student, hours: student.hours - 1});
+      }
+
+      // update students state
+      const tempStudents = students.map((student) => {
+        if(student.id === newLesson.student.id){
+          return { ...student, hours: student.hours - 1};
+        }
+        return student;
+      });
+
+      setStudents(tempStudents);
     }
     catch(e){
       console.error("error adding lesson: ", e);

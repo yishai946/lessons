@@ -1,29 +1,42 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableOpacity,
-  TextInput,
-  Keyboard,
-  TouchableWithoutFeedback,
-} from "react-native";
-import React, { useState } from "react";
-import { useAppContext } from "../context/appContext";
-import Modal from "react-native-modal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
+import React, { useEffect, useState } from "react";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
+} from "react-native";
+import Modal from "react-native-modal";
+import { useAppContext } from "../context/appContext";
 
 const Calendar = () => {
-  const { lessons, addLesson, modalVisible, setModalVisible, students } =
-    useAppContext();
+  const {
+    lessons,
+    addLesson,
+    modalVisible,
+    setModalVisible,
+    students,
+    loading,
+    setLoading,
+  } = useAppContext();
   const [newLesson, setNewLesson] = useState({
     date: new Date(),
     startTime: new Date(),
     endTime: new Date(),
     student: students[0],
   });
+  const [studentsArr, setStudentsArr] = useState([]);
+
+  useEffect(() => {
+    const temp = students.filter((student) => student.hours > 0);
+    setStudentsArr(temp);
+  }, [students]);
 
   const closeModal = () => {
     setModalVisible(false);
@@ -52,100 +65,110 @@ const Calendar = () => {
     setNewLesson({ ...newLesson, student: selected });
   };
 
+  const add = async () => {
+    try {
+      setLoading(true);
+      await addLesson(newLesson);
+      closeModal();
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View>
-      {modalVisible && (
-        <Modal
-          isVisible={modalVisible}
-          onBackdropPress={closeModal}
-          style={styles.modal}
-          propagateSwipe={true}
-        >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              style={styles.modalContainer}
-            >
-              <View style={{ alignItems: "center" }}>
-                {/* <Text style={styles.modalText}>Student</Text> */}
-                <Picker
-                  selectedValue={newLesson.student.name}
-                  onValueChange={(itemValue, itemIndex) =>
-                    handleStudentChange(itemValue)
-                  }
-                  style={{ width: "100%" }}
-                >
-                  {students.map((student) => (
-                    <Picker.Item
-                      key={student.id}
-                      label={student.name}
-                      value={student.name}
-                    />
-                  ))}
-                </Picker>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.modalText}>Date</Text>
-                <DateTimePicker
-                  value={newLesson.date}
-                  mode={"date"}
-                  onChange={(event, selectedDate) =>
-                    handleDateChange(event, selectedDate)
-                  }
-                />
-              </View>
+      <Modal
+        isVisible={modalVisible && studentsArr.length > 0}
+        onBackdropPress={closeModal}
+        style={styles.modal}
+        propagateSwipe={true}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.modalContainer}
+          >
+            <View style={{ alignItems: "center" }}>
+              {/* <Text style={styles.modalText}>Student</Text> */}
+              <Picker
+                selectedValue={newLesson.student.name}
+                onValueChange={(itemValue, itemIndex) =>
+                  handleStudentChange(itemValue)
+                }
+                style={{ width: "100%" }}
+              >
+                {studentsArr.map((student) => (
+                  <Picker.Item
+                    key={student.id}
+                    label={student.name}
+                    value={student.name}
+                  />
+                ))}
+              </Picker>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.modalText}>Date</Text>
+              <DateTimePicker
+                value={newLesson.date}
+                mode={"date"}
+                onChange={(event, selectedDate) =>
+                  handleDateChange(event, selectedDate)
+                }
+              />
+            </View>
 
-              <View style={styles.row}>
-                <Text style={styles.modalText}>Start</Text>
-                <DateTimePicker
-                  value={newLesson.startTime}
-                  mode={"time"}
-                  onChange={(event, selectedDate) =>
-                    handlePickStartTime(event, selectedDate)
-                  }
-                />
-              </View>
+            <View style={styles.row}>
+              <Text style={styles.modalText}>Start</Text>
+              <DateTimePicker
+                value={newLesson.startTime}
+                mode={"time"}
+                onChange={(event, selectedDate) =>
+                  handlePickStartTime(event, selectedDate)
+                }
+              />
+            </View>
 
-              <View style={styles.row}>
-                <Text style={styles.modalText}>End</Text>
-                <DateTimePicker
-                  value={newLesson.endTime}
-                  mode={"time"}
-                  onChange={(event, selectedDate) =>
-                    handlePickEndTime(event, selectedDate)
-                  }
-                />
-              </View>
+            <View style={styles.row}>
+              <Text style={styles.modalText}>End</Text>
+              <DateTimePicker
+                value={newLesson.endTime}
+                mode={"time"}
+                onChange={(event, selectedDate) =>
+                  handlePickEndTime(event, selectedDate)
+                }
+              />
+            </View>
 
-              <View style={styles.row}>
-                <Text style={styles.modalText}>Notes</Text>
-                <TextInput
-                  style={styles.notes}
-                  multiline={true}
-                  onChangeText={(text) =>
-                    setNewLesson({ ...newLesson, notes: text })
-                  }
-                />
-              </View>
+            <View style={styles.row}>
+              <Text style={styles.modalText}>Notes</Text>
+              <TextInput
+                style={styles.notes}
+                multiline={true}
+                onChangeText={(text) =>
+                  setNewLesson({ ...newLesson, notes: text })
+                }
+              />
+            </View>
 
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={{
-                    ...styles.modalButton,
-                    backgroundColor: "#e1e1e1",
-                  }}
-                  onPress={closeModal}
-                >
-                  <Text>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.modalButton}>
-                  <Text style={{ color: "white" }}>Add Lesson</Text>
-                </TouchableOpacity>
-              </View>
-            </KeyboardAvoidingView>
-          </TouchableWithoutFeedback>
-        </Modal>
-      )}
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={{
+                  ...styles.modalButton,
+                  backgroundColor: "#e1e1e1",
+                }}
+                onPress={closeModal}
+              >
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButton} onPress={add}>
+                <Text style={{ color: "white" }}>Add Lesson</Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
