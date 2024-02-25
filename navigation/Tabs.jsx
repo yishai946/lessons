@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 import Home from "../screens/Home";
 import Students from "../screens/Students";
-import Calendar from "../screens/Calendar";
+import Calendar from "../screens/CalendarPage";
 import { TouchableOpacity } from "react-native";
 import { useAppContext } from "../context/appContext";
 

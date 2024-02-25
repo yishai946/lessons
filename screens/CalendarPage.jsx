@@ -14,8 +14,11 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { useAppContext } from "../context/appContext";
+import { Calendar, CalendarList, Agenda } from "react-native-calendars";
+import MyAgenda from "../components/MyAgenda";
 
-const Calendar = () => {
+const CalendarPage = () => {
+  const initDate = new Date().toISOString().split("T")[0];
   const {
     lessons,
     addLesson,
@@ -32,6 +35,8 @@ const Calendar = () => {
     student: students[0],
   });
   const [studentsArr, setStudentsArr] = useState([]);
+  const [selected, setSelected] = useState(initDate); // State for selected date
+  const [date, setDate] = useState(new Date().toISOString()); // State for current date
 
   useEffect(() => {
     const temp = students.filter((student) => student.hours > 0);
@@ -77,8 +82,33 @@ const Calendar = () => {
     }
   };
 
+    const handleDayPress = (selectedDate) => {
+      setSelected(selectedDate.dateString); // Update selected date
+      setDate(selectedDate.dateString); // Update current date
+    };
+
+    const marked = React.useMemo(
+      () => ({
+        [selected]: {
+          selected: true,
+          selectedColor: "royalblue",
+          selectedTextColor: "#ffffff",
+        },
+      }),
+      [selected]
+    );
+
+
   return (
     <View>
+      <Calendar
+        onDayPress={handleDayPress}
+        initialDate={initDate}
+        markedDates={marked}
+      />
+
+      {/* <View style={{width: 500, height: 500}}><MyAgenda /></View> */}
+
       <Modal
         isVisible={modalVisible && studentsArr.length > 0}
         onBackdropPress={closeModal}
@@ -173,7 +203,7 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+export default CalendarPage;
 
 const styles = StyleSheet.create({
   modal: {
