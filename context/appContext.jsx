@@ -26,6 +26,7 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     if (uid) {
       fetchStudents();
+      fetchLessons();
     }
   }, [uid]);
 
@@ -52,7 +53,7 @@ export const AppProvider = ({ children }) => {
       const q = query(
         collection(db, "lessons"),
         where("teacherId", "==", uid),
-        orderBy("start", "desc")
+        orderBy("startTime", "desc")
       );
       const res = await getDocs(q);
       const lessons = [];
@@ -72,6 +73,7 @@ export const AppProvider = ({ children }) => {
       const id = uid + newLesson.startTime.toString();
       await setDoc(doc(db, "lessons", id), {
         ...newLesson,
+        student: newLesson.student.id,
         teacherId: uid,
         timestamp: serverTimestamp(),
       });

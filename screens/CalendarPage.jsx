@@ -14,8 +14,7 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { useAppContext } from "../context/appContext";
-import { Calendar, CalendarList, Agenda } from "react-native-calendars";
-import MyAgenda from "../components/MyAgenda";
+import { Calendar } from "react-native-calendars";
 
 const CalendarPage = () => {
   const initDate = new Date().toISOString().split("T")[0];
@@ -36,7 +35,6 @@ const CalendarPage = () => {
   });
   const [studentsArr, setStudentsArr] = useState([]);
   const [selected, setSelected] = useState(initDate); // State for selected date
-  const [date, setDate] = useState(new Date().toISOString()); // State for current date
 
   useEffect(() => {
     const temp = students.filter((student) => student.hours > 0);
@@ -82,32 +80,34 @@ const CalendarPage = () => {
     }
   };
 
-    const handleDayPress = (selectedDate) => {
-      setSelected(selectedDate.dateString); // Update selected date
-      setDate(selectedDate.dateString); // Update current date
-    };
+  const handleDayPress = (selectedDate) => {
+    setSelected(selectedDate.dateString); // Update selected date
+  };
 
-    const marked = React.useMemo(
-      () => ({
-        [selected]: {
-          selected: true,
-          selectedColor: "royalblue",
-          selectedTextColor: "#ffffff",
-        },
-      }),
-      [selected]
-    );
+  const lessonsDates = lessons.reduce((acc, lesson) => {
+    const dateString = lesson.date.toDate().toISOString().split("T")[0];
+    acc[dateString] = { marked: true, dotColor: "royalblue" };
+    return acc;
+  }, {});
 
+  const markedDatesObject = {
+    ...lessonsDates,
+    [selected]: {
+      selected: true,
+      selectedColor: "royalblue",
+      selectedTextColor: "#ffffff",
+    },
+  };
 
   return (
     <View>
       <Calendar
         onDayPress={handleDayPress}
         initialDate={initDate}
-        markedDates={marked}
+        markedDates={{
+          ...markedDatesObject,
+        }}
       />
-
-      {/* <View style={{width: 500, height: 500}}><MyAgenda /></View> */}
 
       <Modal
         isVisible={modalVisible && studentsArr.length > 0}
@@ -123,7 +123,7 @@ const CalendarPage = () => {
             <View style={{ alignItems: "center" }}>
               {/* <Text style={styles.modalText}>Student</Text> */}
               <Picker
-                selectedValue={newLesson.student.name}
+                selectedValue={newLesson.student ? newLesson.student.name : ""}
                 onValueChange={(itemValue, itemIndex) =>
                   handleStudentChange(itemValue)
                 }
