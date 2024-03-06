@@ -79,6 +79,16 @@ export const AppProvider = ({ children }) => {
       const hours = Math.floor(durationMs / (60 * 60 * 1000));
       const minutes = Math.floor((durationMs % (60 * 60 * 1000)) / (60 * 1000));
 
+      // Update student hours
+      const studentRef = doc(db, "students", newLesson.student);
+      const studentSnap = await getDoc(studentRef);
+      if (!studentSnap.exists()) {
+        throw new Error("Student does not exist");
+      }
+
+      const studentData = studentSnap.data();
+      const remainingHours = studentData.hours - (hours + minutes / 60);
+
       // Add lesson document
       const id = newLesson.startTime + uid;
       await setDoc(doc(db, "lessons", id), {
@@ -100,21 +110,15 @@ export const AppProvider = ({ children }) => {
       });
       setLessons(temp);
 
-      // Update student hours
-      const studentRef = doc(db, "students", newLesson.student);
-      const studentSnap = await getDoc(studentRef);
-      if (studentSnap.exists()) {
-        const data = studentSnap.data();
-        await setDoc(studentRef, {
-          ...data,
-          hours: data.hours - (hours + minutes / 60),
-        });
-      }
+      await setDoc(studentRef, {
+        ...studentData,
+        hours: remainingHours,
+      });
 
       // Update students state
       const tempStudents = students.map((student) => {
-        if (student.id === newLesson.student.id) {
-          return { ...student, hours: student.hours - (hours + minutes / 60) };
+        if (student.id === newLesson.student) {
+          return { ...student, hours: remainingHours };
         }
         return student;
       });

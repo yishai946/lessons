@@ -90,6 +90,16 @@ const CalendarPage = () => {
         throw new Error("End time cannot be before start time.");
       }
 
+      // Check if the selected student has enough hours left for the new lesson
+      if (
+        newLesson.student.hours <
+        calculateLessonHours(newLesson.startTime, newLesson.endTime)
+      ) {
+        throw new Error(
+          "Selected student doesn't have enough hours left for this lesson."
+        );
+      }
+
       const lesson = {
         ...newLesson,
         student: newLesson.student.id,
@@ -112,6 +122,14 @@ const CalendarPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to calculate the duration of the lesson in hours
+  const calculateLessonHours = (startTime, endTime) => {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60); // Convert milliseconds to hours
+    return diff;
   };
 
   const handleDayPress = (selectedDate) => {
