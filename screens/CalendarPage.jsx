@@ -52,7 +52,7 @@ const CalendarPage = () => {
       filterLessons();
       updateLessonDates();
     }
-  }, [lessons, selected]);
+  }, [lessons, selected, students]);
 
   const closeModal = () => {
     setModalVisible(false);
@@ -114,6 +114,34 @@ const CalendarPage = () => {
           minute: "2-digit",
         }), // Convert time to a string in the format "HH:MM"
       };
+
+      // check if the startTime and endTime are not in the middle of other lessons
+      const filtered = lessons.filter((item) => {
+        if (item.date) {
+          return item.date === lesson.date;
+        }
+        return false;
+      });
+
+      const convertToMinutes = (timeString) => {
+        const [hours, minutes] = timeString.split(":").map(Number);
+        return hours * 60 + minutes;
+      };
+
+      filtered.map((item) => {
+        if (
+          convertToMinutes(item.startTime) <
+            convertToMinutes(lesson.startTime) &&
+          convertToMinutes(lesson.startTime) < convertToMinutes(item.endTime)
+        ) {
+          throw new Error("The start time is in the middle of another lesson");
+        } else if (
+          convertToMinutes(item.startTime) < convertToMinutes(lesson.endTime) &&
+          convertToMinutes(lesson.endTime) < convertToMinutes(item.endTime)
+        ) {
+          throw new Error("The end time is in the middle of another lesson");
+        }
+      });
 
       await addLesson(lesson);
       closeModal();
