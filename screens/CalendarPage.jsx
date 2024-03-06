@@ -30,17 +30,20 @@ const CalendarPage = () => {
     students,
     loading,
     setLoading,
+    deleteLesson,
   } = useAppContext();
   const [newLesson, setNewLesson] = useState({
     date: new Date(),
     startTime: new Date(),
     endTime: new Date(),
     student: students[0],
+    notes: "",
   });
   const [studentsArr, setStudentsArr] = useState([]);
   const [selected, setSelected] = useState(initDate);
   const [filteredLessons, setFilteredLessons] = useState([]);
   const [markedDatesObject, setMarkedDatesObject] = useState({});
+  const [options, setOptions] = useState(false);
 
   useEffect(() => {
     const temp = students.filter((student) => student.hours > 0);
@@ -61,7 +64,25 @@ const CalendarPage = () => {
       startTime: new Date(),
       endTime: new Date(),
       student: students[0],
+      notes: "",
     });
+    setOptions(false);
+  };
+
+  const openOptions = (lesson) => {
+    const [year, month, day] = lesson.date.split("-").map(Number);
+    const [startHour, startMinute] = lesson.startTime.split(":").map(Number);
+    const [endHour, endMinute] = lesson.endTime.split(":").map(Number);
+
+    const endTime = new Date(year, month - 1, day, endHour, endMinute);
+    const startTime = new Date(year, month - 1, day, startHour, startMinute);
+
+    // find the student object from the students array
+    const student = students.find((student) => student.id === lesson.student);
+
+    setNewLesson({ ...lesson, startTime, endTime, date: startTime, student });
+    setOptions(true);
+    setModalVisible(true);
   };
 
   const handleDateChange = (event, selectedDate) => {
@@ -84,6 +105,13 @@ const CalendarPage = () => {
   const add = async () => {
     try {
       setLoading(true);
+
+      let pastDuration = 0;
+      if (options) {
+        // get the lesson from the lessons array
+        const lesson = lessons.find((item) => item.id === newLesson.id);
+        pastDuration = lesson.hours + lesson.minutes / 60;
+      }
 
       // Check if end time is before start time
       if (newLesson.endTime < newLesson.startTime) {
@@ -132,18 +160,20 @@ const CalendarPage = () => {
         if (
           convertToMinutes(item.startTime) <
             convertToMinutes(lesson.startTime) &&
-          convertToMinutes(lesson.startTime) < convertToMinutes(item.endTime)
+          convertToMinutes(lesson.startTime) < convertToMinutes(item.endTime) &&
+          item.id !== lesson.id
         ) {
           throw new Error("The start time is in the middle of another lesson");
         } else if (
           convertToMinutes(item.startTime) < convertToMinutes(lesson.endTime) &&
-          convertToMinutes(lesson.endTime) < convertToMinutes(item.endTime)
+          convertToMinutes(lesson.endTime) < convertToMinutes(item.endTime) &&
+          item.id !== lesson.id
         ) {
           throw new Error("The end time is in the middle of another lesson");
         }
       });
 
-      await addLesson(lesson);
+      await addLesson(lesson, pastDuration);
       closeModal();
     } catch (e) {
       Alert.alert(e.message); // Display the error message in the alert
@@ -152,7 +182,6 @@ const CalendarPage = () => {
     }
   };
 
-  // Function to calculate the duration of the lesson in hours
   const calculateLessonHours = (startTime, endTime) => {
     const start = new Date(startTime);
     const end = new Date(endTime);
@@ -207,6 +236,19 @@ const CalendarPage = () => {
     setMarkedDatesObject(markedDatesObject);
   };
 
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      setModalVisible(false);
+      await deleteLesson(newLesson);
+      closeModal();
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return loading ? (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <ActivityIndicator />
@@ -225,7 +267,7 @@ const CalendarPage = () => {
         showsVerticalScrollIndicator={false}
       >
         {filteredLessons.map((lesson, index) => (
-          <Lesson key={index} lesson={lesson} />
+          <Lesson key={index} lesson={lesson} openOptions={openOptions} />
         ))}
       </ScrollView>
 
@@ -300,7 +342,8 @@ const CalendarPage = () => {
               <Text style={styles.modalText}>Notes</Text>
               <TextInput
                 style={styles.notes}
-                multiline={true}
+                value={newLesson.notes}
+                maxLength={25}
                 onChangeText={(text) =>
                   setNewLesson({ ...newLesson, notes: text })
                 }
@@ -309,17 +352,31 @@ const CalendarPage = () => {
 
             {/* buttons */}
             <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={{
-                  ...styles.modalButton,
-                  backgroundColor: "#e1e1e1",
-                }}
-                onPress={closeModal}
-              >
-                <Text>Cancel</Text>
-              </TouchableOpacity>
+              {!options ? (
+                <TouchableOpacity
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: "#e1e1e1",
+                  }}
+                  onPress={closeModal}
+                >
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={handleDelete}
+                  style={{
+                    ...styles.modalButton,
+                    backgroundColor: "#b30000",
+                  }}
+                >
+                  <Text style={{ color: "white" }}>Delete</Text>
+                </TouchableOpacity>
+              )}
               <TouchableOpacity style={styles.modalButton} onPress={add}>
-                <Text style={{ color: "white" }}>Add Lesson</Text>
+                <Text style={{ color: "white" }}>
+                  {options ? "Update" : "Add Lesson"}
+                </Text>
               </TouchableOpacity>
             </View>
           </KeyboardAvoidingView>
@@ -384,7 +441,7 @@ const styles = StyleSheet.create({
   },
   notes: {
     width: "70%",
-    height: 50,
+    height: 40,
     borderColor: "gray",
     borderWidth: 1,
     borderRadius: 8,

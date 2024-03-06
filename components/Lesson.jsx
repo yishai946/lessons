@@ -1,22 +1,35 @@
-import { StyleSheet, Text, View, Dimensions } from "react-native";
+import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from "react-native";
 import React from "react";
+import { Entypo } from "@expo/vector-icons";
+
 
 const width = Dimensions.get("window").width;
 
-const Lesson = ({ lesson }) => {
-
-  // const startToEndDiffInMinutes = (secondsEnd - secondsStart) / 60;
-  // const dots = ".".repeat(Math.max(0, startToEndDiffInMinutes - 5)); // Subtracting 5 for the length of start and end time
+const Lesson = ({ lesson, openOptions }) => {
+  const startTime = lesson.startTime;
+  const endTime = lesson.endTime;
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.dots}
+        onPress={() => openOptions(lesson)}
+      >
+        <Entypo name="dots-three-horizontal" size={24} color="black" />
+      </TouchableOpacity>
       <Text style={styles.name}>{lesson.studentName}</Text>
       <View style={styles.row}>
-        <Text>{lesson.startTime}</Text>
-        {/* <Text>{dots}</Text> */}
-        <Text>{lesson.endTime}</Text>
+        <Text>START</Text>
+        <Text>{startTime}</Text>
       </View>
-      <Text>{lesson.notes}</Text>
+      <View style={styles.row}>
+        <Text>END</Text>
+        <Text>{endTime}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text>NOTES</Text>
+        <Text>{lesson.notes != "" ? lesson.notes : "........"}</Text>
+      </View>
     </View>
   );
 };
@@ -43,7 +56,13 @@ const styles = StyleSheet.create({
     display: "flex",
     width: "100%",
     paddingHorizontal: 20,
+    marginVertical: 5,
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  dots: {
+    position: "absolute",
+    right: 15,
+    top: 10,
   },
 });

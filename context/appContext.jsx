@@ -66,7 +66,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const addLesson = async (newLesson) => {
+  const addLesson = async (newLesson, pastDuration) => {
     try {
       // Parse start and end time strings into Date objects
       const startTime = new Date(`2000-01-01T${newLesson.startTime}`);
@@ -87,7 +87,8 @@ export const AppProvider = ({ children }) => {
       }
 
       const studentData = studentSnap.data();
-      const remainingHours = studentData.hours - (hours + minutes / 60);
+      const remainingHours =
+        studentData.hours - (hours + minutes / 60) + pastDuration;
 
       // Add lesson document
       const id = newLesson.startTime + uid;
@@ -154,6 +155,45 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const deleteLesson = async (lesson) => {
+    try {
+      // delete lesson document
+      await deleteDoc(doc(db, "lessons", lesson.id));
+
+      // Update lessons state
+      const temp = lessons.filter((item) => item.id !== lesson.id);
+      setLessons(temp);
+
+      // Update student hours
+      const studentRef = doc(db, "students", lesson.student.id);
+      const studentSnap = await getDoc(studentRef);
+      if (!studentSnap.exists()) {
+        throw new Error("Student does not exist");
+      }
+
+      const studentData = studentSnap.data();
+      const remainingHours =
+        studentData.hours + lesson.hours + lesson.minutes / 60;
+
+      await setDoc(studentRef, {
+        ...studentData,
+        hours: remainingHours,
+      });
+
+      // Update students state
+      const tempStudents = students.map((student) => {
+        if (student.id === lesson.student.id) {
+          return { ...student, hours: remainingHours };
+        }
+        return student;
+      });
+
+      setStudents(tempStudents);
+    } catch (e) {
+      console.error("error deleting lesson: ", e);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -168,6 +208,7 @@ export const AppProvider = ({ children }) => {
         deleteStudent,
         lessons,
         addLesson,
+        deleteLesson,
       }}
     >
       {children}
