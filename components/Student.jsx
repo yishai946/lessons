@@ -50,7 +50,6 @@ const styles = StyleSheet.create({
     borderColor: "#c2c2c2",
     paddingVertical: 30,
     display: "flex",
-    alignItems: "center",
     borderRadius: 20,
     marginVertical: 10,
   },
@@ -58,6 +57,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 20,
+    alignSelf: "center",
   },
   row: {
     display: "flex",

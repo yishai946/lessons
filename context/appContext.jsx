@@ -49,7 +49,7 @@ export const AppProvider = ({ children }) => {
   };
 
   const fetchLessons = async () => {
-    try{
+    try {
       const q = query(
         collection(db, "lessons"),
         where("teacherId", "==", uid),
@@ -58,53 +58,72 @@ export const AppProvider = ({ children }) => {
       const res = await getDocs(q);
       const lessons = [];
       res.forEach((doc) => {
-        lessons.push(doc.data());
+        lessons.push({ ...doc.data(), id: doc.id });
       });
       setLessons(lessons);
-    }
-    catch(e){
+    } catch (e) {
       console.error("error getting lessons: ", e);
     }
-  }
+  };
 
   const addLesson = async (newLesson) => {
-    try{
-      // add lesson document
-      const id = uid + newLesson.startTime.toString();
+    try {
+      // Parse start and end time strings into Date objects
+      const startTime = new Date(`2000-01-01T${newLesson.startTime}`);
+      const endTime = new Date(`2000-01-01T${newLesson.endTime}`);
+
+      // Calculate duration in milliseconds
+      let durationMs = endTime.getTime() - startTime.getTime();
+
+      // Convert duration from milliseconds to hours and minutes
+      const hours = Math.floor(durationMs / (60 * 60 * 1000));
+      const minutes = Math.floor((durationMs % (60 * 60 * 1000)) / (60 * 1000));
+
+      // Add lesson document
+      const id = newLesson.startTime + uid;
       await setDoc(doc(db, "lessons", id), {
         ...newLesson,
-        student: newLesson.student.id,
         teacherId: uid,
         timestamp: serverTimestamp(),
+        hours,
+        minutes,
       });
 
-      // update lessons state
+      // Update lessons state
       const temp = lessons.filter((lesson) => lesson.id !== newLesson.id);
-      temp.unshift({ ...newLesson, teacherId: auth.currentUser.uid });
+      temp.unshift({
+        ...newLesson,
+        teacherId: auth.currentUser.uid,
+        hours,
+        minutes,
+        id: id,
+      });
       setLessons(temp);
 
-      // update student hours
-      const studentRef = doc(db, "students", newLesson.student.id);
+      // Update student hours
+      const studentRef = doc(db, "students", newLesson.student);
       const studentSnap = await getDoc(studentRef);
-      if(studentSnap.exists()){
-        const student = studentSnap.data();
-        await setDoc(studentRef, { ...student, hours: student.hours - 1});
+      if (studentSnap.exists()) {
+        const data = studentSnap.data();
+        await setDoc(studentRef, {
+          ...data,
+          hours: data.hours - (hours + minutes / 60),
+        });
       }
 
-      // update students state
+      // Update students state
       const tempStudents = students.map((student) => {
-        if(student.id === newLesson.student.id){
-          return { ...student, hours: student.hours - 1};
+        if (student.id === newLesson.student.id) {
+          return { ...student, hours: student.hours - (hours + minutes / 60) };
         }
         return student;
       });
 
       setStudents(tempStudents);
+    } catch (e) {
+      return e;
     }
-    catch(e){
-      console.error("error adding lesson: ", e);
-    }
-  }
+  };
 
   const addStudent = async (newStudent) => {
     try {

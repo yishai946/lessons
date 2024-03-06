@@ -11,10 +11,14 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
+  FlatList,
+  Alert,
+  ScrollView,
 } from "react-native";
 import Modal from "react-native-modal";
 import { useAppContext } from "../context/appContext";
 import { Calendar } from "react-native-calendars";
+import Lesson from "../components/Lesson";
 
 const CalendarPage = () => {
   const initDate = new Date().toISOString().split("T")[0];
@@ -34,12 +38,21 @@ const CalendarPage = () => {
     student: students[0],
   });
   const [studentsArr, setStudentsArr] = useState([]);
-  const [selected, setSelected] = useState(initDate); // State for selected date
+  const [selected, setSelected] = useState(initDate);
+  const [filteredLessons, setFilteredLessons] = useState([]);
+  const [markedDatesObject, setMarkedDatesObject] = useState({});
 
   useEffect(() => {
     const temp = students.filter((student) => student.hours > 0);
     setStudentsArr(temp);
   }, [students]);
+
+  useEffect(() => {
+    if (lessons.length > 0) {
+      filterLessons();
+      updateLessonDates();
+    }
+  }, [lessons, selected]);
 
   const closeModal = () => {
     setModalVisible(false);
@@ -71,32 +84,81 @@ const CalendarPage = () => {
   const add = async () => {
     try {
       setLoading(true);
-      await addLesson(newLesson);
+
+      // Check if end time is before start time
+      if (newLesson.endTime < newLesson.startTime) {
+        throw new Error("End time cannot be before start time.");
+      }
+
+      const lesson = {
+        ...newLesson,
+        student: newLesson.student.id,
+        studentName: newLesson.student.name,
+        date: newLesson.date.toISOString().split("T")[0], // Extract date part from ISO string
+        startTime: newLesson.startTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }), // Convert time to a string in the format "HH:MM"
+        endTime: newLesson.endTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }), // Convert time to a string in the format "HH:MM"
+      };
+
+      await addLesson(lesson);
       closeModal();
     } catch (e) {
-      console.log(e);
+      Alert.alert(e.message); // Display the error message in the alert
     } finally {
       setLoading(false);
     }
   };
 
   const handleDayPress = (selectedDate) => {
-    setSelected(selectedDate.dateString); // Update selected date
+    setSelected(selectedDate.dateString);
   };
 
-  const lessonsDates = lessons.reduce((acc, lesson) => {
-    const dateString = lesson.date.toDate().toISOString().split("T")[0];
-    acc[dateString] = { marked: true, dotColor: "royalblue" };
-    return acc;
-  }, {});
+  const filterLessons = () => {
+    const filtered = lessons.filter((lesson) => {
+      if (lesson.date) {
+        return lesson.date === selected;
+      }
+      return false;
+    });
 
-  const markedDatesObject = {
-    ...lessonsDates,
-    [selected]: {
-      selected: true,
-      selectedColor: "royalblue",
-      selectedTextColor: "#ffffff",
-    },
+    filtered.sort((a, b) => {
+      const parseTime = (timeStr) => {
+        const [hours, minutes] = timeStr.split(":").map(Number);
+        return hours * 60 + minutes; // Convert hours to minutes and add minutes
+      };
+
+      const startTimeA = parseTime(a.startTime);
+      const startTimeB = parseTime(b.startTime);
+
+      return startTimeA - startTimeB;
+    });
+
+    setFilteredLessons(filtered);
+  };
+
+  const updateLessonDates = () => {
+    const dates = lessons.reduce((acc, lesson) => {
+      if (lesson.date) {
+        acc[lesson.date] = { marked: true, dotColor: "royalblue" };
+      }
+      return acc;
+    }, {});
+
+    const markedDatesObject = {
+      ...dates,
+      [selected]: {
+        selected: true,
+        selectedColor: "royalblue",
+        selectedTextColor: "#ffffff",
+      },
+    };
+
+    setMarkedDatesObject(markedDatesObject);
   };
 
   return (
@@ -104,10 +166,18 @@ const CalendarPage = () => {
       <Calendar
         onDayPress={handleDayPress}
         initialDate={initDate}
-        markedDates={{
-          ...markedDatesObject,
-        }}
+        markedDates={markedDatesObject}
       />
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {filteredLessons.map((lesson, index) => (
+          <Lesson key={index} lesson={lesson} />
+        ))}
+      </ScrollView>
 
       <Modal
         isVisible={modalVisible && studentsArr.length > 0}
@@ -120,8 +190,8 @@ const CalendarPage = () => {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             style={styles.modalContainer}
           >
+            {/* students */}
             <View style={{ alignItems: "center" }}>
-              {/* <Text style={styles.modalText}>Student</Text> */}
               <Picker
                 selectedValue={newLesson.student ? newLesson.student.name : ""}
                 onValueChange={(itemValue, itemIndex) =>
@@ -138,6 +208,8 @@ const CalendarPage = () => {
                 ))}
               </Picker>
             </View>
+
+            {/* date */}
             <View style={styles.row}>
               <Text style={styles.modalText}>Date</Text>
               <DateTimePicker
@@ -149,6 +221,7 @@ const CalendarPage = () => {
               />
             </View>
 
+            {/* start time*/}
             <View style={styles.row}>
               <Text style={styles.modalText}>Start</Text>
               <DateTimePicker
@@ -160,6 +233,7 @@ const CalendarPage = () => {
               />
             </View>
 
+            {/* end time */}
             <View style={styles.row}>
               <Text style={styles.modalText}>End</Text>
               <DateTimePicker
@@ -171,6 +245,7 @@ const CalendarPage = () => {
               />
             </View>
 
+            {/* notes */}
             <View style={styles.row}>
               <Text style={styles.modalText}>Notes</Text>
               <TextInput
@@ -182,6 +257,7 @@ const CalendarPage = () => {
               />
             </View>
 
+            {/* buttons */}
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={{
@@ -206,6 +282,16 @@ const CalendarPage = () => {
 export default CalendarPage;
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingBottom: 30,
+  },
+  scrollView: {
+    height: "50%",
+    alignSelf: "center",
+    padding: 10,
+  },
   modal: {
     margin: 0,
     justifyContent: "flex-end",

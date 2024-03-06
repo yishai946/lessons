@@ -6,6 +6,8 @@ Project Description
 
 ### Todo
 
+- [ ] end the lesson ui (fix the dots)  
+- [ ] add check for adding lesson with out of funds  
 - [ ] add loading to add lesson  
 
 ### In Progress
