@@ -2,23 +2,23 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Picker } from "@react-native-picker/picker";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-  FlatList,
-  Alert,
-  ScrollView,
 } from "react-native";
-import Modal from "react-native-modal";
-import { useAppContext } from "../context/appContext";
 import { Calendar } from "react-native-calendars";
+import Modal from "react-native-modal";
 import Lesson from "../components/Lesson";
+import { useAppContext } from "../context/appContext";
 
 const CalendarPage = () => {
   const initDate = new Date().toISOString().split("T")[0];
@@ -207,7 +207,11 @@ const CalendarPage = () => {
     setMarkedDatesObject(markedDatesObject);
   };
 
-  return (
+  return loading ? (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <ActivityIndicator />
+    </View>
+  ) : (
     <View>
       <Calendar
         onDayPress={handleDayPress}
