@@ -268,7 +268,12 @@ const CalendarPage = () => {
         showsVerticalScrollIndicator={false}
       >
         {filteredLessons.map((lesson, index) => (
-          <Lesson key={index} lesson={lesson} openOptions={openOptions} />
+          <Lesson
+            key={index}
+            lesson={lesson}
+            openOptions={openOptions}
+            withOptions={true}
+          />
         ))}
       </ScrollView>
 

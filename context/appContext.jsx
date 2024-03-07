@@ -98,6 +98,7 @@ export const AppProvider = ({ children }) => {
         timestamp: serverTimestamp(),
         hours,
         minutes,
+        done: false,
       });
 
       // Update lessons state
@@ -108,6 +109,7 @@ export const AppProvider = ({ children }) => {
         hours,
         minutes,
         id: id,
+        done: false,
       });
       setLessons(temp);
 

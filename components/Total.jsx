@@ -13,7 +13,7 @@ const Total = ({ hours, money }) => {
         </View>
         <View style={styles.col}>
           <Text style={styles.header}>Money</Text>
-          <Text style={{ fontSize: 18 }}>{money}</Text>
+          <Text style={{ fontSize: 18 }}>{money} ₪</Text>
         </View>
       </View>
       <Text style={{ alignSelf: "center", marginVertical: 5 }}>

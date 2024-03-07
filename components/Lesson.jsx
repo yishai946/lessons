@@ -1,22 +1,29 @@
-import { StyleSheet, Text, View, Dimensions, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import React from "react";
 import { Entypo } from "@expo/vector-icons";
 
-
 const width = Dimensions.get("window").width;
 
-const Lesson = ({ lesson, openOptions }) => {
+const Lesson = ({ lesson, openOptions, withOptions }) => {
   const startTime = lesson.startTime;
   const endTime = lesson.endTime;
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.dots}
-        onPress={() => openOptions(lesson)}
-      >
-        <Entypo name="dots-three-horizontal" size={24} color="black" />
-      </TouchableOpacity>
+    <View style={!lesson.done ? styles.container : {...styles.container, borderColor: "green" }}>
+      {withOptions && (
+        <TouchableOpacity
+          style={styles.dots}
+          onPress={() => openOptions(lesson)}
+        >
+          <Entypo name="dots-three-horizontal" size={24} color="black" />
+        </TouchableOpacity>
+      )}
       <Text style={styles.name}>{lesson.studentName}</Text>
       <View style={styles.row}>
         <Text>START</Text>
