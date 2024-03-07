@@ -1,18 +1,14 @@
-import { Button, StyleSheet, Text, SafeAreaView } from "react-native";
+import { StyleSheet, Text, SafeAreaView } from "react-native";
 import React from "react";
-import { auth } from "../firebaseConfig";
+import { useAppContext } from "../context/appContext";
+import Total from "../components/Total";
 
 const Home = () => {
+  const { user } = useAppContext();
 
   return (
     <SafeAreaView>
-      <Text>Home</Text>
-      <Button
-        title="Logout"
-        onPress={() => {
-          auth.signOut();
-        }}
-      />
+      <Total hours={user.hours} money={user.money} />
     </SafeAreaView>
   );
 };

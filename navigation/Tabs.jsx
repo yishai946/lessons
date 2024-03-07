@@ -1,4 +1,8 @@
-import { MaterialCommunityIcons, AntDesign } from "@expo/vector-icons";
+import {
+  MaterialCommunityIcons,
+  AntDesign,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import React from "react";
 import Home from "../screens/Home";
@@ -6,11 +10,12 @@ import Students from "../screens/Students";
 import Calendar from "../screens/CalendarPage";
 import { TouchableOpacity } from "react-native";
 import { useAppContext } from "../context/appContext";
+import { auth } from "../firebaseConfig";
 
 const Tab = createBottomTabNavigator();
 
 const Tabs = () => {
-  const { modalVisible, setModalVisible } = useAppContext();
+  const { setModalVisible } = useAppContext();
 
   return (
     <Tab.Navigator>
@@ -21,6 +26,16 @@ const Tabs = () => {
           tabBarLabel: "Home",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="home" color={color} size={size} />
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              style={{ marginRight: 15 }}
+              onPress={() => {
+                auth.signOut();
+              }}
+            >
+              <MaterialIcons name="logout" size={24} color="black" />
+            </TouchableOpacity>
           ),
         }}
       />
