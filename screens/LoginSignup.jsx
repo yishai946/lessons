@@ -32,19 +32,15 @@ const LoginSignup = ({ navigation }) => {
       }
     } catch (error) {
       console.log(error);
-    } finally {
-      setLoading(false);
     }
   };
 
   const signup = async () => {
     try {
       setLoading(true);
-      const res = await Auth.signup(email, password);
+      await Auth.signup(email, password);
     } catch (error) {
       console.log(error);
-    } finally {
-      setLoading(false);
     }
   };
 

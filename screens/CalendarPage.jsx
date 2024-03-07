@@ -259,6 +259,7 @@ const CalendarPage = () => {
         onDayPress={handleDayPress}
         initialDate={initDate}
         markedDates={markedDatesObject}
+        enableSwipeMonths={true}
       />
 
       <ScrollView

@@ -4,9 +4,10 @@ import { onAuthStateChanged } from "firebase/auth";
 import React, { useEffect } from "react";
 import { StatusBar } from "react-native";
 import { useAppContext } from "../context/appContext";
-import { auth } from "../firebaseConfig";
+import { auth, db } from "../firebaseConfig";
 import LoginSignup from "../screens/LoginSignup";
 import Tabs from "./Tabs";
+import { getDoc, doc, setDoc, collection } from "firebase/firestore";
 
 const stack = createNativeStackNavigator();
 
@@ -14,17 +15,36 @@ const Stack = () => {
   const { user, setUser, loading, setLoading } = useAppContext();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        if(loading){
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      try {
+        if (user) {
+          const docRef = doc(db, "users", user.uid);
+          let docSnap = await getDoc(docRef);
+
+          if (!docSnap.exists()) {
+            await setDoc(docRef, {
+              email: user.email,
+              hours: 0,
+              money: 0,
+            });
+
+            docSnap = await getDoc(docRef);
+          }
+
+          setUser(docSnap.data());
+        } else {
+          if (loading) {
+            setLoading(false);
+          }
+          setUser(null);
+        }
+      } catch (e) {
+        console.log(e);
+      }
+      finally {
+        if (loading) {
           setLoading(false);
         }
-        setUser(user);
-      } else {
-        if(loading){
-          setLoading(false);
-        }
-        setUser(null);
       }
     });
     return unsubscribe;
