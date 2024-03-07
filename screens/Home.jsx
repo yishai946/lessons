@@ -31,7 +31,7 @@ const Home = () => {
   }, [lessons, now]);
 
   return (
-    <ScrollView>
+    <ScrollView contentContainerStyle={{display: "flex", alignItems: "center"}}>
       <Total hours={user.hours} money={user.money} />
       <Report lessons={toReport} />
       <LessonsList lessons={lessonsToday} />

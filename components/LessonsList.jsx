@@ -19,11 +19,12 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 20,
     fontWeight: "bold",
-    alignSelf: "center",
-    margin: 20,
+    alignSelf: "flex-start",
+    margin: 10,
+    marginTop: 30,
   },
   container: {
     display: "flex",
     alignItems: "center",
-  }
+  },
 });
