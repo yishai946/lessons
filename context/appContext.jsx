@@ -196,6 +196,42 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const checkLesson = async (lessonId) => {
+    try {
+      const lessonUpdated = lessons.find((lesson) => lesson.id === lessonId);
+      lessonUpdated.done = !lessonUpdated.done;
+      const lessonRef = doc(db, "lessons", lessonId);
+      await setDoc(lessonRef, lessonUpdated);
+      const temp = lessons.map((lesson) => {
+        if (lesson.id === lessonId) {
+          return lessonUpdated;
+        }
+        return lesson;
+      });
+      setLessons(temp);
+
+      // update the user hours and money
+      const userRef = doc(db, "users", uid);
+      let money = user.money;
+      let hours = user.hours;
+
+      const lessonHours = lessonUpdated.hours + lessonUpdated.minutes / 60;
+
+      hours += lessonHours;
+      money += lessonHours * 75;
+
+      await setDoc(userRef, {
+        ...user,
+        hours,
+        money,
+      });
+
+      setUser({ ...user, hours, money });
+    } catch (e) {
+      console.error("error checking lesson: ", e);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -211,6 +247,7 @@ export const AppProvider = ({ children }) => {
         lessons,
         addLesson,
         deleteLesson,
+        checkLesson,
       }}
     >
       {children}

@@ -6,13 +6,36 @@ import {
   TouchableOpacity,
 } from "react-native";
 import React from "react";
+import { Ionicons, Feather } from "@expo/vector-icons";
+import * as Linking from "expo-linking";
+import { useAppContext } from "../context/appContext";
 
 const width = Dimensions.get("window").width;
+const url =
+  "https://docs.google.com/forms/d/e/1FAIpQLScITsuaUkNsQTjMwwG-Xtml4i4o28L0EyAw6THEbgLOO_qSPQ/viewform?pli=1&pli=1";
 
 const Report = ({ lessons }) => {
+  const { checkLesson } = useAppContext();
+
+  const link = () => {
+    Linking.openURL(url);
+  };
+
   return (
     <View>
-      <Text style={styles.header}>Report</Text>
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          marginTop: 30,
+        }}
+      >
+        <Text style={styles.header}>Report</Text>
+        <TouchableOpacity onPress={link}>
+          <Ionicons name="arrow-forward" size={24} color="royalblue" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.container}>
         {lessons.map((item, index) => (
           <View
@@ -23,8 +46,8 @@ const Report = ({ lessons }) => {
             }
             key={index}
           >
-            <TouchableOpacity>
-              <Text style={{ color: "royalblue" }}>Report</Text>
+            <TouchableOpacity onPress={() => checkLesson(item.id)}>
+              <Feather name="minus-square" size={24} color="black" />
             </TouchableOpacity>
             <Text>
               {item.date} | {item.startTime}
@@ -53,7 +76,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     alignSelf: "flex-start",
     margin: 10,
-    marginTop: 30,
   },
   item: {
     display: "flex",
